@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL查询工具 - 数据库管理系统</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        
+        .user-info {
+            text-align: right;
+            padding: 10px 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .content {
+            display: flex;
+            min-height: 500px;
+        }
+        
+        .sidebar {
+            width: 250px;
+            background: #f8f9fa;
+            border-right: 1px solid #dee2e6;
+            padding: 20px;
+        }
+        
+        .main-content {
+            flex: 1;
+            padding: 20px;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 5px;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 150px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 14px;
+            resize: vertical;
+        }
+        
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px 0 0;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #5a6fd8;
+        }
+        
+        button.secondary {
+            background: #6c757d;
+        }
+        
+        button.secondary:hover {
+            background: #5a6268;
+        }
+        
+        .result-container {
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .result-header {
+            background: #f8f9fa;
+            padding: 10px 15px;
+            border-bottom: 1px solid #ddd;
+            font-weight: bold;
+        }
+        
+        .result-content {
+            padding: 15px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            white-space: pre-wrap;
+        }
+        
+        .success {
+            color: #28a745;
+        }
+        
+        .error {
+            color: #dc3545;
+        }
+        
+        .info {
+            color: #17a2b8;
+        }
+        
+        .table-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .table-item {
+            padding: 8px 12px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .table-item:hover {
+            background: #e9ecef;
+        }
+        
+        .table-item.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .structure-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        .structure-table th,
+        .structure-table td {
+            border: 1px solid #ddd;
+            padding: 8px 12px;
+            text-align: left;
+        }
+        
+        .structure-table th {
+            background: #f8f9fa;
+            font-weight: bold;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        .data-table th,
+        .data-table td {
+            border: 1px solid #ddd;
+            padding: 8px 12px;
+            text-align: left;
+        }
+        
+        .data-table th {
+            background: #667eea;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .data-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+        
+        /* 滚动条样式 */
+        .table-wrapper::-webkit-scrollbar {
+            width: 12px;
+            height: 12px;
+        }
+        
+        .table-wrapper::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 6px;
+        }
+        
+        .table-wrapper::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 6px;
+        }
+        
+        .table-wrapper::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+        
+        /* 表格单元格自动换行 */
+        .data-table td {
+            word-wrap: break-word;
+            word-break: break-all;
+            white-space: normal;
+        }
+        
+        /* 固定表头 */
+        .table-wrapper thead th {
+            position: sticky;
+            top: 0;
+            background: #667eea;
+            z-index: 10;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+        }
+        
+        .nav-link {
+            display: inline-block;
+            margin: 0 10px;
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        .nav-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 SQL查询工具</h1>
+            <p>数据库内容查询与管理</p>
+        </div>
+        
+        <div class="user-info">
+            <span>欢迎, <strong th:text="${currentUser.username}"></strong></span>
+            <a href="/" class="nav-link">🏠 返回首页</a>
+            <a href="/logout" class="nav-link">🚪 退出登录</a>
+        </div>
+        
+        <div class="content">
+            <div class="sidebar">
+                <div class="section">
+                    <div class="section-title">📋 数据库表</div>
+                    <ul class="table-list" id="tableList">
+                        <li class="table-item" th:each="table : ${tableNames}" 
+                            th:text="${table}" 
+                            th:data-table="${table}"
+                            onclick="loadTableStructure(this)">
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="section">
+                    <div class="section-title">⚡ 快捷操作</div>
+                    <button class="secondary" onclick="loadSampleQueries()">加载示例查询</button>
+                    <button class="secondary" onclick="clearResults()">清空结果</button>
+                </div>
+            </div>
+            
+            <div class="main-content">
+                <div class="section">
+                    <div class="section-title">🔍 SQL查询</div>
+                    <textarea id="sqlInput" placeholder="请输入SQL查询语句&#10;例如：SELECT * FROM users LIMIT 10;"></textarea>
+                    <div>
+                        <button onclick="executeQuery()">▶ 执行查询</button>
+                        <button class="secondary" onclick="clearQuery()">🗑 清空</button>
+                        <button class="secondary" onclick="formatSql()">📄 格式化</button>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <div class="section-title">📋 查询结果</div>
+                    <div class="result-container">
+                        <div class="result-header">执行状态</div>
+                        <div class="result-content" id="queryResult">
+                            请输入SQL语句并点击"执行查询"按钮
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="section" id="structureSection" style="display: none;">
+                    <div class="section-title">🏗️ 表结构信息</div>
+                    <div id="structureContent"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentTable = null;
+        
+        // 执行SQL查询
+        async function executeQuery() {
+            const sql = document.getElementById('sqlInput').value.trim();
+            const resultDiv = document.getElementById('queryResult');
+            
+            if (!sql) {
+                showMessage('请输入SQL查询语句', 'error');
+                return;
+            }
+            
+            showLoading();
+            
+            try {
+                const response = await fetch('/sql/execute', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ sql: sql })
+                });
+                
+                const result = await response.json();
+                displayResult(result);
+                
+            } catch (error) {
+                showMessage('网络错误: ' + error.message, 'error');
+            }
+        }
+        
+        // 显示查询结果
+        function displayResult(result) {
+            const resultDiv = document.getElementById('queryResult');
+            
+            if (!result.success) {
+                showMessage('错误: ' + result.error, 'error');
+                return;
+            }
+            
+            if (result.queryType === 'SELECT') {
+                // 显示SELECT查询结果
+                if (result.data && result.data.length > 0) {
+                    // 先显示成功信息
+                    let infoHtml = `<div class="success">查询成功！共返回 ${result.rowCount} 行数据</div>`;
+                    resultDiv.innerHTML = infoHtml;
+                    
+                    // 然后显示数据表格
+                    displayDataTable(result.data);
+                } else {
+                    showMessage('查询成功，但没有返回数据', 'info');
+                }
+            } else if (result.queryType === 'DML') {
+                // 显示DML操作结果
+                showMessage(`操作成功！${result.message}`, 'success');
+            } else {
+                // 显示其他操作结果
+                showMessage(result.message || 'SQL执行成功', 'success');
+            }
+        }
+        
+        // 显示数据表格
+        function displayDataTable(data) {
+            if (!data || data.length === 0) return;
+            
+            const columns = Object.keys(data[0]);
+            let tableHtml = '<div class="table-wrapper" style="max-height: 350px; overflow-y: auto;">';
+            tableHtml += '<table class="data-table" style="width: 100%; border-collapse: collapse;">';
+            
+            // 表头
+            tableHtml += '<thead><tr>';
+            columns.forEach(col => {
+                tableHtml += `<th style="background: #667eea; color: white; font-weight: bold; padding: 8px 12px; text-align: left; position: sticky; top: 0; z-index: 10;">${col}</th>`;
+            });
+            tableHtml += '</tr></thead>';
+            
+            // 数据行
+            tableHtml += '<tbody>';
+            data.forEach((row, index) => {
+                // 交替行颜色
+                const rowClass = index % 2 === 0 ? '' : ' style="background: #f8f9fa;"';
+                tableHtml += `<tr${rowClass}>`;
+                columns.forEach(col => {
+                    const value = row[col];
+                    const displayValue = value !== null ? value : '<span style="color: #6c757d; font-style: italic;">NULL</span>';
+                    tableHtml += `<td style="border: 1px solid #ddd; padding: 8px 12px; text-align: left; word-break: break-word; max-width: 200px;">${displayValue}</td>`;
+                });
+                tableHtml += '</tr>';
+            });
+            tableHtml += '</tbody></table>';
+            tableHtml += '</div>';
+            
+            // 将表格添加到结果容器中，而不是替换整个容器
+            const resultContainer = document.querySelector('.result-container');
+            const resultContent = document.getElementById('queryResult');
+            
+            // 保留头部信息，在其下方添加表格
+            const existingContent = resultContent.innerHTML;
+            resultContent.innerHTML = existingContent + tableHtml;
+        }
+        
+        // 加载表结构
+        async function loadTableStructure(element) {
+            const tableName = element.dataset.table;
+            const structureSection = document.getElementById('structureSection');
+            const structureContent = document.getElementById('structureContent');
+            
+            // 更新选中状态
+            document.querySelectorAll('.table-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            element.classList.add('active');
+            
+            currentTable = tableName;
+            
+            try {
+                const response = await fetch(`/sql/table/${tableName}/structure`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    displayTableStructure(result.structure, tableName);
+                    structureSection.style.display = 'block';
+                } else {
+                    structureContent.innerHTML = `<div class="error">获取表结构失败: ${result.error}</div>`;
+                    structureSection.style.display = 'block';
+                }
+            } catch (error) {
+                structureContent.innerHTML = `<div class="error">网络错误: ${error.message}</div>`;
+                structureSection.style.display = 'block';
+            }
+        }
+        
+        // 显示表结构
+        function displayTableStructure(structure, tableName) {
+            const structureContent = document.getElementById('structureContent');
+            
+            if (!structure || structure.length === 0) {
+                structureContent.innerHTML = '<div class="info">该表没有结构信息</div>';
+                return;
+            }
+            
+            let tableHtml = `<h4>表: ${tableName}</h4>`;
+            tableHtml += '<table class="structure-table">';
+            tableHtml += '<thead><tr><th>列名</th><th>数据类型</th><th>允许空值</th><th>默认值</th></tr></thead>';
+            tableHtml += '<tbody>';
+            
+            structure.forEach(column => {
+                tableHtml += '<tr>';
+                tableHtml += `<td><strong>${column.COLUMN_NAME || column.columnName}</strong></td>`;
+                tableHtml += `<td>${column.TYPE_NAME || column.typeName}</td>`;
+                tableHtml += `<td>${column.IS_NULLABLE || column.isNullable}</td>`;
+                tableHtml += `<td>${column.COLUMN_DEFAULT || column.columnDefault || '-'}</td>`;
+                tableHtml += '</tr>';
+            });
+            
+            tableHtml += '</tbody></table>';
+            structureContent.innerHTML = tableHtml;
+        }
+        
+        // 加载示例查询
+        function loadSampleQueries() {
+            const sampleQueries = [
+                'SELECT * FROM users LIMIT 10;',
+                'SELECT COUNT(*) FROM users;',
+                'SELECT username, email FROM users WHERE created_at > \'2024-01-01\';',
+                'DESCRIBE users;'
+            ];
+            
+            const sqlInput = document.getElementById('sqlInput');
+            sqlInput.value = sampleQueries.join('\n\n');
+        }
+        
+        // 清空查询
+        function clearQuery() {
+            document.getElementById('sqlInput').value = '';
+            clearResults();
+        }
+        
+        // 清空结果
+        function clearResults() {
+            document.getElementById('queryResult').innerHTML = '请输入SQL语句并点击"执行查询"按钮';
+            document.getElementById('structureSection').style.display = 'none';
+            document.querySelectorAll('.table-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            currentTable = null;
+        }
+        
+        // 格式化SQL
+        function formatSql() {
+            const sqlInput = document.getElementById('sqlInput');
+            let sql = sqlInput.value.trim();
+            if (!sql) return;
+            
+            // 简单的SQL格式化
+            sql = sql.replace(/;/g, ';\n')
+                     .replace(/(SELECT|FROM|WHERE|GROUP BY|ORDER BY|HAVING|INSERT INTO|VALUES|UPDATE|SET|DELETE FROM)/gi, '\n$1')
+                     .replace(/\n+/g, '\n')
+                     .trim();
+            
+            sqlInput.value = sql;
+        }
+        
+        // 显示消息
+        function showMessage(message, type) {
+            const resultDiv = document.getElementById('queryResult');
+            resultDiv.innerHTML = `<div class="${type}">${message}</div>`;
+        }
+        
+        // 显示加载状态
+        function showLoading() {
+            const resultDiv = document.getElementById('queryResult');
+            resultDiv.innerHTML = '<div class="loading">正在执行查询...</div>';
+        }
+        
+        // 页面加载完成后的初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 可以在这里添加初始化代码
+        });
+    </script>
+</body>
+</html>

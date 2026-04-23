@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>注册测试</title>
+</head>
+<body>
+    <h1>注册功能测试</h1>
+    <form action="/register" method="post">
+        <div>
+            <label>用户名:</label>
+            <input type="text" name="username" required>
+        </div>
+        <div>
+            <label>邮箱:</label>
+            <input type="email" name="email" required>
+        </div>
+        <div>
+            <label>密码:</label>
+            <input type="password" name="password" required>
+        </div>
+        <button type="submit">注册</button>
+    </form>
+    
+    <hr>
+    <h2>已有账号？</h2>
+    <a href="/login">前往登录</a>
+</body>
+</html>

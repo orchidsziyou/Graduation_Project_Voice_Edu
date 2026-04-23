@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI智能助手</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 30px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            padding: 12px 20px;
+            background-color: #e0e0e0;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .tab-btn.active {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .tab-btn:hover:not(.active) {
+            background-color: #d5d5d5;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+        textarea, input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+        textarea:focus, input[type="text"]:focus {
+            border-color: #4CAF50;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+        }
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        .hidden {
+            display: none;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        button {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+        }
+        .feature-info {
+            background-color: #e8f5e8;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #4CAF50;
+        }
+        .feature-info h3 {
+            margin-top: 0;
+            color: #2e7d32;
+        }
+        .feature-info ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .feature-info li {
+            margin: 5px 0;
+        }
+        /* 对话历史样式 */
+        .chat-history {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .chat-message {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 8px;
+        }
+        .user-message {
+            background-color: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            margin-left: 20px;
+        }
+        .ai-message {
+            background-color: #f1f8e9;
+            border-left: 4px solid #4CAF50;
+            margin-right: 20px;
+        }
+        .message-role {
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        .user-message .message-role {
+            color: #1976D2;
+        }
+        .ai-message .message-role {
+            color: #388E3C;
+        }
+        .message-content {
+            font-size: 15px;
+            line-height: 1.5;
+        }
+        .session-info {
+            background-color: #fff3e0;
+            border: 1px solid #ff9800;
+            border-radius: 8px;
+            padding: 10px;
+            margin: 15px 0;
+            font-size: 14px;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        .btn-secondary {
+            background: linear-gradient(45deg, #ff9800, #f57c00);
+        }
+        .btn-danger {
+            background: linear-gradient(45deg, #f44336, #d32f2f);
+        }
+        .quick-questions {
+            background-color: #fff8e1;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #ffc107;
+        }
+        .loading {
+            text-align: center;
+            color: #ff9800;
+            font-weight: bold;
+            padding: 10px;
+            animation: pulse 1.5s ease-in-out infinite alternate;
+        }
+        @keyframes pulse {
+            from { opacity: 0.6; }
+            to { opacity: 1; }
+        }
+        .chat-message.typing {
+            color: #999;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航栏 -->
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 15px 0; margin-bottom: 30px;">
+        <div class="container" style="background: transparent; box-shadow: none; padding: 0 30px; display: flex; justify-content: space-between; align-items: center;">
+            <h1 style="color: white; margin: 0;">🤖 AI智能助手平台</h1>
+            <div id="authSection" style="display: flex; gap: 15px; align-items: center;">
+                <!-- 登录状态会通过JavaScript动态更新 -->
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('chat')">💬 智能对话</button>
+            <button class="tab-btn" onclick="goToUploadPage()">📁 文件上传</button>
+            <button class="tab-btn" onclick="goToSpeechRecognition()">🎤 语音识别</button>
+            <button class="tab-btn" onclick="goToQuestionGenerator()">🧠 题目生成</button>
+            <button class="tab-btn" onclick="goToSqlQuery()">🗄️ SQL查询</button>
+            <button class="tab-btn" onclick="goToTranscriptionRecords()" th:if="${session.currentUser != null}">📋 转写记录</button>
+        </div>
+        
+        <!-- 智能对话 Tab -->
+        <div id="chat-tab" class="tab-content">
+            <div class="feature-info">
+                <h3>💬 智能对话功能</h3>
+                <p>与AI进行自然语言对话，支持多轮交流和上下文理解。</p>
+                <ul>
+                    <li>支持日常问答</li>
+                    <li>提供专业咨询</li>
+                    <li>智能语义理解</li>
+                </ul>
+            </div>
+            
+            <!-- 对话历史区域 -->
+            <div id="chatHistoryContainer" class="chat-history">
+                <h3>📜 对话历史</h3>
+                <div id="chatMessages"></div>
+                <div id="loadingIndicator" class="loading" style="display: none;">⏳ AI正在思考中...</div>
+            </div>
+            
+            <!-- 输入区域 -->
+            <div class="form-group">
+                <label for="inputData">请输入您的问题：</label>
+                <textarea id="inputData" name="inputData" placeholder="例如：你能帮我解释一下机器学习是什么吗？" required></textarea>
+            </div>
+            
+            <!-- 快捷按钮 -->
+            <div class="quick-questions">
+                <p><strong>💡 快速提问：</strong></p>
+                <div class="button-group">
+                    <button type="button" class="btn-secondary" onclick="addExampleQuestion('你好，介绍一下你自己')">自我介绍</button>
+                    <button type="button" class="btn-secondary" onclick="addExampleQuestion('今天天气怎么样？')">询问天气</button>
+                    <button type="button" class="btn-secondary" onclick="addExampleQuestion('帮我写一篇关于环保的文章')">创意写作</button>
+                    <button type="button" class="btn-secondary" onclick="addExampleQuestion('分析这段文字的情感倾向')">文本分析</button>
+                </div>
+            </div>
+            
+            <!-- 系统功能导航 -->
+            <div class="feature-info">
+                <h3>🚀 系统功能</h3>
+                <div class="button-group">
+                    <a href="/upload-page" class="btn btn-secondary" style="text-decoration: none; display: inline-block;">📁 文件上传</a>
+                    <a href="/speech-recognition" class="btn btn-secondary" style="text-decoration: none; display: inline-block;">🎤 语音识别</a>
+                    <a href="/question-generator" class="btn btn-secondary" style="text-decoration: none; display: inline-block;">🧠 题目生成</a>
+                    <a href="/sql-query" class="btn btn-secondary" style="text-decoration: none; display: inline-block;">📊 SQL查询</a>
+                    <a th:if="${session.currentUser != null}" href="/transcription/records" class="btn btn-secondary" style="text-decoration: none; display: inline-block;">📋 我的转写记录</a>
+                </div>
+            </div>
+            
+            <!-- 操作按钮 -->
+            <div class="action-buttons">
+                <button type="button" onclick="sendChatMessage()">🚀 发送消息</button>
+                <button type="button" class="btn-secondary" onclick="clearChatHistory()">🗑️ 清除历史</button>
+                <button type="button" class="btn-danger" onclick="toggleHistory()">👁️ 显示/隐藏历史</button>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        let chatHistory = [];
+        let isSending = false;
+        let isLoggedIn = false;
+        let currentUser = null;
+        
+        // 页面加载初始化
+        window.onload = function() {
+            checkLoginStatus();
+            loadChatHistory();
+            document.getElementById('inputData').focus();
+        };
+        
+        // 检查登录状态
+        function checkLoginStatus() {
+            fetch('/api/auth/status')
+                .then(response => response.json())
+                .then(data => {
+                    isLoggedIn = data.loggedIn;
+                    currentUser = data.username;
+                    updateAuthDisplay(data.loginEnabled);
+                })
+                .catch(error => {
+                    console.error('检查登录状态失败:', error);
+                    // 默认显示未登录状态
+                    updateAuthDisplay(true);
+                });
+        }
+        
+        // 更新认证显示
+        function updateAuthDisplay(loginEnabled) {
+            const authSection = document.getElementById('authSection');
+            
+            if (!loginEnabled) {
+                authSection.innerHTML = '';
+                return;
+            }
+            
+            if (isLoggedIn && currentUser) {
+                // 已登录状态
+                authSection.innerHTML = `
+                    <span style="color: white; font-weight: bold;">欢迎，${currentUser}！</span>
+                    <form action="/logout" method="post" style="margin: 0; display: inline;">
+                        <button type="submit" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid white; padding: 8px 15px; border-radius: 5px; cursor: pointer; transition: all 0.3s;">
+                            🔐 登出
+                        </button>
+                    </form>
+                `;
+            } else {
+                // 未登录状态
+                authSection.innerHTML = `
+                    <a href="/login" style="color: white; text-decoration: none; background: rgba(255,255,255,0.2); padding: 8px 15px; border-radius: 5px; border: 1px solid white; transition: all 0.3s;">
+                        🔓 登录
+                    </a>
+                    <a href="/register" style="color: white; text-decoration: none; background: rgba(255,255,255,0.3); padding: 8px 15px; border-radius: 5px; border: 1px solid white; transition: all 0.3s; margin-left: 10px;">
+                        📝 注册
+                    </a>
+                `;
+            }
+        }
+        
+        // 加载对话历史
+        function loadChatHistory() {
+            fetch('/api/chat/history')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        chatHistory = data.history || [];
+                        renderChatHistory();
+                        // 显示历史容器
+                        document.getElementById('chatHistoryContainer').style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    console.error('加载历史失败:', error);
+                });
+        }
+        
+        // 渲染对话历史
+        function renderChatHistory() {
+            const messagesDiv = document.getElementById('chatMessages');
+            if (chatHistory.length === 0) {
+                messagesDiv.innerHTML = '<p style="text-align: center; color: #999;">暂无对话历史</p>';
+                return;
+            }
+            
+            let html = '';
+            chatHistory.forEach((msg, index) => {
+                const messageClass = msg.role === 'user' ? 'user-message' : 'ai-message';
+                const roleName = msg.role === 'user' ? '👤 用户:' : '🤖 AI助手:';
+                html += `
+                    <div class="chat-message ${messageClass}" data-index="${index}">
+                        <div class="message-role">${roleName}</div>
+                        <div class="message-content">${escapeHtml(msg.content)}</div>
+                    </div>
+                `;
+            });
+            messagesDiv.innerHTML = html;
+            
+            // 滚动到底部
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+        
+        // 发送聊天消息
+        function sendChatMessage() {
+            if (isSending) return;
+            
+            const inputElement = document.getElementById('inputData');
+            const message = inputElement.value.trim();
+            
+            if (!message) {
+                alert('请输入消息内容！');
+                inputElement.focus();
+                return;
+            }
+            
+            // 添加用户消息到历史
+            addUserMessage(message);
+            
+            // 清空输入框
+            inputElement.value = '';
+            
+            // 显示加载状态
+            showLoading(true);
+            isSending = true;
+            
+            // 发送请求到后端
+            fetch('/api/chat/send', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    message: message
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                isSending = false;
+                showLoading(false);
+                
+                if (data.success) {
+                    // 添加AI回复到历史
+                    addAIMessage(data.response);
+                } else {
+                    // 显示错误消息
+                    addErrorMessage(data.message || '发送失败，请重试');
+                }
+            })
+            .catch(error => {
+                isSending = false;
+                showLoading(false);
+                console.error('发送消息失败:', error);
+                addErrorMessage('网络错误，请检查连接后重试');
+            });
+        }
+        
+        // 添加用户消息
+        function addUserMessage(content) {
+            chatHistory.push({
+                role: 'user',
+                content: content,
+                timestamp: new Date().toISOString()
+            });
+            renderChatHistory();
+        }
+        
+        // 添加AI消息
+        function addAIMessage(content) {
+            chatHistory.push({
+                role: 'assistant',
+                content: content,
+                timestamp: new Date().toISOString()
+            });
+            renderChatHistory();
+        }
+        
+        // 添加错误消息
+        function addErrorMessage(content) {
+            const messagesDiv = document.getElementById('chatMessages');
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'chat-message ai-message';
+            errorDiv.innerHTML = `
+                <div class="message-role" style="color: #f44336;">❌ 错误:</div>
+                <div class="message-content" style="color: #f44336;">${escapeHtml(content)}</div>
+            `;
+            messagesDiv.appendChild(errorDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+        
+        // 显示/隐藏加载状态
+        function showLoading(show) {
+            const loading = document.getElementById('loadingIndicator');
+            loading.style.display = show ? 'block' : 'none';
+        }
+        
+        // HTML转义函数
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function switchTab(tabName) {
+            // 隐藏所有tab内容
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.add('hidden');
+            });
+            
+            // 移除所有按钮的active状态
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // 显示选中的tab并激活对应按钮
+            document.getElementById(tabName + '-tab').classList.remove('hidden');
+            event.target.classList.add('active');
+            
+            // 切换到聊天tab时显示历史
+            if (tabName === 'chat') {
+                document.getElementById('chatHistoryContainer').style.display = 'block';
+                document.getElementById('inputData').focus();
+            }
+        }
+        
+        // 切换历史显示/隐藏
+        function toggleHistory() {
+            const container = document.getElementById('chatHistoryContainer');
+            if (container.style.display === 'none') {
+                container.style.display = 'block';
+            } else {
+                container.style.display = 'none';
+            }
+        }
+        
+        // 清除对话历史
+        function clearChatHistory() {
+            if (confirm('确定要清除所有对话历史吗？这将开始一个新的对话。')) {
+                fetch('/api/chat/clear', {
+                    method: 'POST'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        chatHistory = [];
+                        renderChatHistory();
+                        alert('对话历史已清除！');
+                    } else {
+                        alert('清除失败：' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('清除历史失败:', error);
+                    alert('网络错误，请重试');
+                });
+            }
+        }
+        
+        // 添加示例问题到输入框
+        function addExampleQuestion(question) {
+            document.getElementById('inputData').value = question;
+            document.getElementById('inputData').focus();
+        }
+        
+        // 回车键发送消息
+        document.getElementById('inputData').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendChatMessage();
+            }
+        });
+        
+        // 实时显示字符数
+        document.getElementById('inputData').addEventListener('input', function() {
+            const length = this.value.length;
+            const label = this.previousElementSibling;
+            if (length > 0) {
+                label.innerHTML = `请输入您的问题（已输入 ${length} 字符）：`;
+            } else {
+                label.innerHTML = '请输入您的问题：';
+            }
+        });
+        
+        // 跳转到文件上传页面
+        function goToUploadPage() {
+            window.location.href = '/upload-page';
+        }
+
+        function goToSqlQuery(){
+            window.location.href = '/sql-query'
+        }
+        
+        // 跳转到语音识别页面
+        function goToSpeechRecognition() {
+            window.location.href = '/speech-recognition';
+        }
+        
+        // 跳转到转写记录页面
+        function goToTranscriptionRecords() {
+            window.location.href = '/transcription/records';
+        }
+        
+        // 跳转到题目生成页面
+        function goToQuestionGenerator() {
+            window.location.href = '/question-generator';
+        }
+    </script>
+</body>
+</html>

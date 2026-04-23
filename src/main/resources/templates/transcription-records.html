@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的转写记录 - 语音转写系统</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #eee;
+        }
+        .header h1 {
+            color: #333;
+            margin: 0;
+        }
+        .user-info {
+            text-align: right;
+            color: #666;
+        }
+        .stats {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .stats p {
+            margin: 5px 0;
+            font-size: 16px;
+        }
+        .record-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .record-table th, .record-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        .record-table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+        .record-table tr:hover {
+            background-color: #f5f5f5;
+        }
+        .empty-message {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 18px;
+        }
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+        .back-link:hover {
+            background-color: #0056b3;
+        }
+        .error-message {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .file-name {
+            word-break: break-all;
+            max-width: 200px;
+        }
+        .order-id {
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .date-time {
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>我的转写记录</h1>
+            <div class="user-info">
+                <p>欢迎, <span th:text="${currentUser?.username}">用户名</span>!</p>
+                <p>ID: <span th:text="${currentUser?.id}">用户ID</span></p>
+            </div>
+        </div>
+
+        <!-- 错误消息 -->
+        <div th:if="${error}" class="error-message" th:text="${error}">
+            错误信息
+        </div>
+
+        <!-- 统计信息 -->
+        <div class="stats">
+            <p><strong>总转写次数:</strong> <span th:text="${totalCount ?: 0}">0</span> 次</p>
+        </div>
+
+        <!-- 转写记录表格 -->
+        <div th:if="${records != null and not #lists.isEmpty(records)}">
+            <table class="record-table">
+                <thead>
+                    <tr>
+                        <th>序号</th>
+                        <th>文件名</th>
+                        <th>文件大小</th>
+                        <th>订单ID</th>
+                        <th>转写时间</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="record, iterStat : ${records}">
+                        <td th:text="${iterStat.index + 1}">1</td>
+                        <td class="file-name" th:text="${record.fileName}">文件名</td>
+                        <td th:text="${#numbers.formatDecimal(record.fileSize / 1024.0, 1, 'POINT', 2, 'POINT')} + ' KB'">文件大小</td>
+                        <td class="order-id" th:text="${record.orderId}">订单ID</td>
+                        <td class="date-time" th:text="${#temporals.format(record.createdAt, 'yyyy-MM-dd HH:mm:ss')}">转写时间</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 空记录提示 -->
+        <div th:if="${records == null or #lists.isEmpty(records)}" class="empty-message">
+            <p>暂无转写记录</p>
+            <p>上传音频文件后，记录将显示在这里</p>
+        </div>
+
+        <!-- 返回链接 -->
+        <a href="/" class="back-link">返回首页</a>
+    </div>
+</body>
+</html>
