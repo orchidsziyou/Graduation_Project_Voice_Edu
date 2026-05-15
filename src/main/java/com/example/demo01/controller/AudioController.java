@@ -2,6 +2,7 @@ package com.example.demo01.controller;
 
 import com.example.demo01.service.FileTranscriptionService;
 import com.example.demo01.model.User;
+import com.example.demo01.service.VoskSpeechService;
 import com.example.demo01.util.JwtTokenUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +37,9 @@ public class AudioController {
     
     @Value("${file.upload.path:D:/Homework/Final_Project/uploads}")
     private String uploadPath;
+
+//    @Autowired
+//    private VoskSpeechService voskSpeechService;
     
     /**
      * 上传音频文件进行转写
@@ -141,6 +145,70 @@ public class AudioController {
                     .body("获取结果失败: " + e.getMessage());
         }
     }
+
+//    /*
+//    * 本地转写的接口
+//    * */
+//    @PostMapping("/transcribe-local")
+//    public ResponseEntity<Map<String, Object>> transcribeSpeechLocal(
+//            @RequestParam("file") MultipartFile file,
+//            HttpSession session) {
+//
+//        Map<String, Object> response = new HashMap<>();
+//
+//        try {
+//            // 检查文件是否为空
+//            if (file.isEmpty()) {
+//                response.put("success", false);
+//                response.put("message", "请选择音频文件");
+//                return ResponseEntity.badRequest().body(response);
+//            }
+//
+//            // 检查文件类型是否为wav类型，前端也已经过滤过一次了
+//            String fileName = file.getOriginalFilename().toLowerCase();
+//            if (!fileName.endsWith(".wav")) {
+//                response.put("success", false);
+//                response.put("message", "本地识别仅支持 WAV 格式\n\n 提示:\n- 请使用 Windows 录音机录制 WAV 文件\n- 或使用在线工具将 MP3 转换为 WAV\n- 推荐采样率: 16kHz, 单声道, 16-bit");
+//                return ResponseEntity.badRequest().body(response);
+//            }
+//
+//            System.out.println("开始本地 Vosk 识别: " + fileName);
+//
+//            // 读取文件内容
+//            byte[] audioData = file.getInputStream().readAllBytes();
+//
+//            // 保存文件到磁盘
+//            String savedFilePath = saveUploadedFile(file, audioData);
+//            if (savedFilePath != null) {
+//                System.out.println("文件已保存到: " + savedFilePath);
+//            }
+//            // 调用 Vosk 服务进行识别
+//            String result = voskSpeechService.recognize(audioData);
+//            System.out.println("本地识别完成，结果长度: " + result.length());
+//
+//            // 注意：不再在后端自动保存转写记录
+//            // 前端会在转写成功后手动调用 /api/transcription/save-local 接口保存
+//
+//            response.put("success", true);
+//            response.put("result", result);
+//            response.put("fileName", fileName);
+//            response.put("fileSize", file.getSize());
+//            response.put("mode", "local-vosk");
+//
+//            return ResponseEntity.ok(response);
+//
+//        } catch (Exception e) {
+//            System.err.println("本地语音识别异常: " + e.getMessage());
+//            e.printStackTrace();
+//
+//            response.put("success", false);
+//            response.put("message", "本地识别失败: " + e.getMessage());
+//            return ResponseEntity.status(500).body(response);
+//        }
+//    }
+//
+
+
     
     /**
      * 验证音频文件类型

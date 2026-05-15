@@ -48,7 +48,7 @@ const routes = [
     path: '/sql-query',
     name: 'SqlQuery',
     component: () => import('../views/SqlQuery.vue'),
-    meta: { requiresAuth: true, requiresAdmin: false }
+    meta: { requiresAuth: true, requiresAdmin: true }
   },
   {
     path: '/admin/files',
@@ -126,23 +126,23 @@ const router = createRouter({
 // 路由守卫
 router.beforeEach((to, from, next) => {
   const userStore = useUserStore()
-  
+
   if (to.meta.requiresAuth && !userStore.isLoggedIn) {
     // 需要登录但未登录，跳转到登录页
     return next('/login')
   }
-  
+
   if (to.path === '/login' && userStore.isLoggedIn) {
     // 已登录却访问登录页，重定向到首页
     return next('/')
   }
-  
+
   if (to.meta.requiresAdmin && !userStore.isAdmin) {
     // 需要管理员权限但不是管理员
     alert('抱歉，您没有权限访问此页面。只有管理员可以访问 SQL 查询功能。')
     return next('/')
   }
-  
+
   next()
 })
 
